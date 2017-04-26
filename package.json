@@ -1,0 +1,31 @@
+{
+  "name": "windows-active-process",
+  "version": "1.0.0",
+  "description": "Checks which app or process is currently in the foreground (active)",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": "https://github.com/felixrieseberg/windows-active-process",
+  "license": "MIT",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/felixrieseberg/windows-active-process/blob/master/LICENSE"
+    }
+  ],
+  "dependencies": {
+    "bindings": "^1.2.1",
+    "nan": "^2.4.0"
+  },
+  "author": {
+    "email": "felix@felixrieseberg.com",
+    "name": "Felix Rieseberg",
+    "url": "http://www.felixrieseberg.com"
+  },
+  "keywords": [
+    "windows",
+    "process",
+    "GetForegroundWindow"
+  ]
+}
