@@ -14,9 +14,9 @@
 
 using namespace v8;
 
+#ifdef _WIN32
 bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
 {
-  #ifdef _WIN32
   HWND fg = GetForegroundWindow();
   if (fg)
   {
@@ -33,10 +33,9 @@ bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
       return (ret != FALSE);
     }
   }
-  #endif // _WIN32
-
   return false;
 }
+#endif // _WIN32
 
 void Method(const v8::FunctionCallbackInfo<Value>& args) {
   Isolate* isolate = Isolate::GetCurrent();
