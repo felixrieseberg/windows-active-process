@@ -1,5 +1,5 @@
 #include <node.h>
-#include <v8.h>
+#include <nan.h>
 
 #define _WIN32_WINNT 0x0601
 
@@ -11,8 +11,6 @@
 #else
 #include <stdbool.h>
 #endif
-
-using namespace v8;
 
 #ifdef _WIN32
 bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
@@ -37,29 +35,26 @@ bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
 }
 #endif // _WIN32
 
-void Method(const v8::FunctionCallbackInfo<Value>& args) {
-  Isolate* isolate = Isolate::GetCurrent();
-  HandleScope scope(isolate);
+NAN_METHOD(Method) {
+  Nan::HandleScope scope;
 
   #ifdef _WIN32
   TCHAR buffer[1024];
   if (GetActiveProcessName(buffer, 1024))
   {
-    args.GetReturnValue().Set(String::NewFromUtf8(isolate, buffer));
+    info.GetReturnValue().Set(Nan::New(buffer).ToLocalChecked());
   }
   else
   {
-    args.GetReturnValue().Set(String::NewFromUtf8(isolate, ""));
+    info.GetReturnValue().Set(Nan::EmptyString());
   }
   #else
-  args.GetReturnValue().Set(String::NewFromUtf8(isolate, ""));
+  info.GetReturnValue().Set(Nan::EmptyString());
   #endif
 }
 
-void Init(Handle<Object> exports) {
-  Isolate* isolate = Isolate::GetCurrent();
-  exports->Set(String::NewFromUtf8(isolate, "getActiveProcessName"),
-      FunctionTemplate::New(isolate, Method)->GetFunction());
+NAN_MODULE_INIT(Init) {
+  Nan::Set(target, Nan::New("getActiveProcessName").ToLocalChecked(), Nan::GetFunction(Nan::New<v8::FunctionTemplate>(Method)).ToLocalChecked());
 }
 
 NODE_MODULE(quiethours, Init)
