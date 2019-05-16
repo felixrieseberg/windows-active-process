@@ -13,7 +13,7 @@
 #endif
 
 #ifdef _WIN32
-bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
+bool _GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
 {
   HWND fg = GetForegroundWindow();
   if (fg)
@@ -35,12 +35,12 @@ bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
 }
 #endif // _WIN32
 
-NAN_METHOD(Method) {
+NAN_METHOD(GetActiveProcessName) {
   Nan::HandleScope scope;
 
   #ifdef _WIN32
   TCHAR buffer[1024];
-  if (GetActiveProcessName(buffer, 1024))
+  if (_GetActiveProcessName(buffer, 1024))
   {
     info.GetReturnValue().Set(Nan::New(buffer).ToLocalChecked());
   }
@@ -54,7 +54,11 @@ NAN_METHOD(Method) {
 }
 
 NAN_MODULE_INIT(Init) {
-  Nan::Set(target, Nan::New("getActiveProcessName").ToLocalChecked(), Nan::GetFunction(Nan::New<v8::FunctionTemplate>(Method)).ToLocalChecked());
+  Nan::SetMethod(target, "getActiveProcessName", GetActiveProcessName);
 }
 
-NODE_MODULE(quiethours, Init)
+#if NODE_MAJOR_VERSION >= 10
+NAN_MODULE_WORKER_ENABLED(processname, Init)
+#else
+NODE_MODULE(processname, Init)
+#endif
