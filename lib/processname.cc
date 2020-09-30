@@ -59,7 +59,7 @@ static napi_value Method(napi_env env, napi_callback_info info) {
   if (GetActiveProcessName(buffer, &len))
   {
     napi_value str = NULL;
-    NAPI_CALL(napi_create_string_utf16(env, buffer, len, &str));
+    NAPI_CALL(env, napi_create_string_utf16(env, buffer, len, &str));
     return str;
   }
 #endif
