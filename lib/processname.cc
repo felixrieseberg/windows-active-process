@@ -1,5 +1,23 @@
-#include <node.h>
-#include <nan.h>
+#include <node_api.h>
+
+#define NAPI_CALL(env, call)                                      \
+  do {                                                            \
+    napi_status status = (call);                                  \
+    if (status != napi_ok) {                                      \
+      const napi_extended_error_info* error_info = NULL;          \
+      napi_get_last_error_info((env), &error_info);               \
+      bool is_pending;                                            \
+      napi_is_exception_pending((env), &is_pending);              \
+      if (!is_pending) {                                          \
+        const char* message = (error_info->error_message == NULL) \
+            ? "empty error message"                               \
+            : error_info->error_message;                          \
+        napi_throw_error((env), NULL, message);                   \
+        return NULL;                                              \
+      }                                                           \
+    }                                                             \
+  } while(0)
+
 
 #define _WIN32_WINNT 0x0601
 
@@ -13,7 +31,7 @@
 #endif
 
 #ifdef _WIN32
-bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
+bool GetActiveProcessName(WCHAR *buffer, DWORD *cchLen)
 {
   HWND fg = GetForegroundWindow();
   if (fg)
@@ -25,9 +43,8 @@ bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
 
     if (hProcess)
     {
-      BOOL ret = QueryFullProcessImageName(hProcess, 0, buffer, &cchLen);
-
-	    CloseHandle(hProcess);
+      BOOL ret = QueryFullProcessImageNameW(hProcess, 0, buffer, cchLen);
+      CloseHandle(hProcess);
       return (ret != FALSE);
     }
   }
@@ -35,26 +52,27 @@ bool GetActiveProcessName(TCHAR *buffer, DWORD cchLen)
 }
 #endif // _WIN32
 
-NAN_METHOD(Method) {
-  Nan::HandleScope scope;
-
-  #ifdef _WIN32
-  TCHAR buffer[1024];
-  if (GetActiveProcessName(buffer, 1024))
+static napi_value Method(napi_env env, napi_callback_info info) {
+#ifdef _WIN32
+  WCHAR buffer[1024];
+  DWORD len = 1024;
+  if (GetActiveProcessName(buffer, &len))
   {
-    info.GetReturnValue().Set(Nan::New(buffer).ToLocalChecked());
+    napi_value str = NULL;
+    NAPI_CALL(napi_create_string_utf16(env, buffer, len, &str));
+    return str;
   }
-  else
-  {
-    info.GetReturnValue().Set(Nan::EmptyString());
-  }
-  #else
-  info.GetReturnValue().Set(Nan::EmptyString());
-  #endif
+#endif
+  napi_value ret = NULL;
+  NAPI_CALL(env, napi_get_undefined(env, &ret));
+  return ret;
 }
 
-NAN_MODULE_INIT(Init) {
-  Nan::Set(target, Nan::New("getActiveProcessName").ToLocalChecked(), Nan::GetFunction(Nan::New<v8::FunctionTemplate>(Method)).ToLocalChecked());
+NAPI_MODULE_INIT() {
+  napi_value result = NULL;
+  NAPI_CALL(env, napi_create_object(env, &result));
+  napi_value fn = NULL;
+  NAPI_CALL(env, napi_create_function(env, "getActiveProcessName", 0, Method, NULL, &fn));
+  NAPI_CALL(env, napi_set_named_property(env, result, "getActiveProcessName", fn));
+  return result;
 }
-
-NODE_MODULE(quiethours, Init)
