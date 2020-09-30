@@ -1,6 +1,6 @@
 {
   "name": "windows-active-process",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Checks which app or process is currently in the foreground (active)",
   "main": "lib/index.js",
   "scripts": {
